@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SMTest1</string>
+    <string name="Loading">Loading</string>
+    <string name="no_internet">Please check internet connection.</string>
+</resources>
