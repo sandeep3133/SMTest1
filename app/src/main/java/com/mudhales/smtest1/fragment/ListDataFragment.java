@@ -20,14 +20,20 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mudhales.smtest1.MainActivity;
 import com.mudhales.smtest1.R;
 import com.mudhales.smtest1.adapter.CountryDescriptionAdapter;
+import com.mudhales.smtest1.data.CountryDescription;
+import com.mudhales.smtest1.utils.LocalDatabase;
+import com.mudhales.smtest1.utils.Utils;
+
+import java.util.List;
 
 public class ListDataFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     View view;
-    SwipeRefreshLayout swipeContainer;
-    RecyclerView rvItems;
-    CountryDescriptionAdapter rowDataAdapter;
-    ProgressDialog progressDialog;
+    private SwipeRefreshLayout swipeContainer;
+    private RecyclerView rvItems;
+    private CountryDescriptionAdapter rowDataAdapter;
+    private ProgressDialog progressDialog;
     private ListDataViewModel listViewModel;
+    private LocalDatabase database;
 
     public static ListDataFragment newInstance() {
         return new ListDataFragment();
@@ -38,6 +44,7 @@ public class ListDataFragment extends Fragment implements SwipeRefreshLayout.OnR
                              @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.list_data_fragment, container, false);
+        database = new LocalDatabase(getActivity());
         setUpUI();
         return view;
     }
@@ -70,27 +77,45 @@ public class ListDataFragment extends Fragment implements SwipeRefreshLayout.OnR
     private void initialization() {
         // View Model
         listViewModel = ViewModelProviders.of(this).get(ListDataViewModel.class);
-        loadLoginData();
+        // loadListData();
+        if (Utils.isInternetConnectionAvailable(getActivity())) {
+            loadListData();
+        } else {
+            List<CountryDescription> RecordsList = database.getAllRecords();
+            if (rowDataAdapter != null && RecordsList != null)
+                rowDataAdapter.refreshList(RecordsList);
+            else {
+                if (RecordsList != null) {
+                    rowDataAdapter = new CountryDescriptionAdapter(getActivity(), RecordsList);
+                    rvItems.setAdapter(rowDataAdapter);
+                }
+            }
+        }
     }
 
     @Override
     public void onRefresh() {
-        checkLoginData();
+        checkRecordsData();
     }
 
     // To fetch data from server by SM 201912111355
-    private void loadLoginData() {
+    private void loadListData() {
         progressDialog.show();
         listViewModel.getListResponseLiveData().observe(this, response -> {
             if (response != null) {
                 showMessage("Success");
-                ((MainActivity)getActivity()).setActionBarTitle(response.getTitle());
+                ((MainActivity) getActivity()).setActionBarTitle(response.getTitle());
                 if (response.getCountryDescription() != null) {
-                    if (rowDataAdapter != null)
+                    if (rowDataAdapter != null) {
                         rowDataAdapter.refreshList(response.getCountryDescription());
+                        if (response.getCountryDescription() != null)
+                            database.addRecords(response.getTitle(), response.getCountryDescription());
+                    }
                     else {
                         rowDataAdapter = new CountryDescriptionAdapter(getActivity(), response.getCountryDescription());
                         rvItems.setAdapter(rowDataAdapter);
+                        if (response.getCountryDescription() != null)
+                            database.addRecords(response.getTitle(), response.getCountryDescription());
                     }
                 }
 
@@ -102,18 +127,22 @@ public class ListDataFragment extends Fragment implements SwipeRefreshLayout.OnR
         });
     }// To fetch data from server by SM 201912111355
 
-    private void checkLoginData() {
+    private void checkRecordsData() {
         swipeContainer.setRefreshing(true);
         listViewModel.getListResponseLiveData().observe(this, response -> {
             if (response != null) {
                 showMessage("Success");
-                ((MainActivity)getActivity()).setActionBarTitle(response.getTitle());
+                ((MainActivity) getActivity()).setActionBarTitle(response.getTitle());
                 if (response.getCountryDescription() != null) {
-                    if (rowDataAdapter != null)
+                    if (rowDataAdapter != null) {
                         rowDataAdapter.refreshList(response.getCountryDescription());
-                    else {
+                        if (response.getCountryDescription() != null)
+                            database.addRecords(response.getTitle(), response.getCountryDescription());
+                    } else {
                         rowDataAdapter = new CountryDescriptionAdapter(getActivity(), response.getCountryDescription());
                         rvItems.setAdapter(rowDataAdapter);
+                        if (response.getCountryDescription() != null)
+                            database.addRecords(response.getTitle(), response.getCountryDescription());
                     }
                 }
 
@@ -124,7 +153,8 @@ public class ListDataFragment extends Fragment implements SwipeRefreshLayout.OnR
             swipeContainer.setRefreshing(false);
         });
     }
-    private void showMessage(String strMessage){
+
+    private void showMessage(String strMessage) {
         Snackbar snackbar = Snackbar
                 .make(view, strMessage, Snackbar.LENGTH_SHORT);
         snackbar.show();

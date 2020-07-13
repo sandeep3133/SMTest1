@@ -10,17 +10,21 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.mudhales.smtest1.fragment.ListDataFragment;
+import com.mudhales.smtest1.utils.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
     BroadcastReceiver broadcastReceiver;
+    private View view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        view = findViewById(R.id.screenContainer);
         installListener();
         // Added fragment for list data by SM
         if(savedInstanceState == null)
@@ -37,12 +41,12 @@ public class MainActivity extends AppCompatActivity {
             broadcastReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    Bundle extras = intent.getExtras();
-                    NetworkInfo info = (NetworkInfo) extras
-                            .getParcelable("networkInfo");
-                    NetworkInfo.State state = info.getState();
+                   // Bundle extras = intent.getExtras();
+                   // NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
+                   // NetworkInfo.State state = info.getState();
                    // Log.d("BroadcastReceiver", info.toString() + " " + state.toString());
-                    if (state != NetworkInfo.State.CONNECTED) {
+                   // if (state != NetworkInfo.State.CONNECTED) {
+                    if (Utils.isInternetConnectionAvailable(context)) {
                         showMessage(getString(R.string.no_internet));
                     }
                 }
@@ -54,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void showMessage(String strMessage){
         Snackbar snackbar = Snackbar
-                .make(this.getCurrentFocus(), strMessage, Snackbar.LENGTH_SHORT);
+                .make(view, strMessage, Snackbar.LENGTH_SHORT);
         snackbar.show();
     }
 
