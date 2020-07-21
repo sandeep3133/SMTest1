@@ -20,7 +20,6 @@ public class MainActivityTest {
     public void setUp() throws Exception {
         mainActivity = mActivityTestRule.getActivity();
     }
-
     @Test
     public void testLaunch() {
         View  view = mainActivity.findViewById(R.id.screenContainer);
@@ -42,7 +41,6 @@ public class MainActivityTest {
         RecyclerView rvItems = fragment.getView().findViewById(R.id.rvItems);
         assertNotNull(rvItems);
     }
-
     @After
     public void tearDown() throws Exception {
         mainActivity = null;
